@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>WebGL Robot Scene</title>
+    <script src="gl-matrix-min.js"></script>
+    <script src="webgl-debug.js"></script>
+    <script src="main.js" defer></script>
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body>
+    <h1>Εργασία Γραφικών Υπολογιστών</h1>
+
+    <canvas id="glcanvas" width="800" height="800"></canvas>
+
+    <div id="controls">
+      <!-- Βήμα 3: viewAngle + camOrthoDistance -->
+      <label
+        >View Angle: <input type="number" id="viewAngle" value="60"
+      /></label>
+      <label
+        >Cam Ortho Distance:
+        <input type="number" id="camOrthoDistance" value="10"
+      /></label>
+
+      <!-- Βήμα 3: Επιλογές κάμερας -->
+      <fieldset>
+        <legend>Camera Positions</legend>
+        <label
+          ><input
+            type="radio"
+            name="cameraPos"
+            value="Left-Front-Top"
+            checked
+          />
+          Left-Front-Top</label
+        >
+        <label
+          ><input type="radio" name="cameraPos" value="Right-Back-Bottom" />
+          Right-Back-Bottom</label
+        >
+        <!-- ...όλες οι επιλογές από το Βήμα 3 -->
+      </fieldset>
+
+      <!-- Βήμα 4: Button redraw -->
+      <button id="redrawBtn">Redraw</button>
+
+      <!-- Βήμα 6: Buttons animation -->
+      <button id="startAnim">Start Animation</button>
+      <button id="stopAnim">Stop Animation</button>
+    </div>
+  </body>
+</html>
