@@ -1,8 +1,14 @@
 let gl;
+let program;
+let uModelMatrix;
+let vertexBuffer;
+let aPosition;
+let uColor;
+
 
 window.onload = function () {
   const canvas = document.getElementById('glcanvas'); // Επιλογή του καμβά
-  gl = canvas.getContext('webgl'); //ενεργοποίηση WebGL
+ gl = canvas.getContext('webgl', { depth: true }); //ενεργοποίηση WebGL
   if (!gl) {
     alert("WebGL not supported");
     return;
@@ -17,18 +23,20 @@ window.onload = function () {
   const {vertices, colors} = getCubeData();
 
   // Δημιουργία shader προγράμματος
-  const vertexShaderSource = `
-  attribute vec3 aPosition;
-  attribute vec3 aColor;
-  varying vec3 vColor;
-  uniform mat4 uProjectionMatrix;
-  uniform mat4 uViewMatrix;
-  void main(void) {
-    gl_Position = uProjectionMatrix * uViewMatrix * vec4(aPosition, 1.0);
-    vColor = aColor;
-  }
-`;
+    const vertexShaderSource = `
+      attribute vec3 aPosition;
+     uniform vec3 uColor;
+     varying vec3 vColor;  
 
+      uniform mat4 uProjectionMatrix;
+      uniform mat4 uViewMatrix;
+      uniform mat4 uModelMatrix;
+
+      void main(void) {
+        gl_Position = uProjectionMatrix * uViewMatrix * uModelMatrix * vec4(aPosition, 1.0);
+        vColor = uColor;
+      }
+    `;
 
   const fragmentShaderSource = `
     precision mediump float;
@@ -38,12 +46,15 @@ window.onload = function () {
     }
   `;
 
-  const program = createShaderProgram(vertexShaderSource, fragmentShaderSource);
+   program = createShaderProgram(vertexShaderSource, fragmentShaderSource);
   gl.useProgram(program);
+
+ uModelMatrix = gl.getUniformLocation(program, "uModelMatrix");
+ uColor = gl.getUniformLocation(program, "uColor");
 
   document.getElementById("redrawBtn").addEventListener("click", () => {
   redrawCamera(program);
-});
+  });
 
   // Δημιουργία των πινάκων
   const viewMatrix = mat4.create();
@@ -59,23 +70,17 @@ window.onload = function () {
   gl.uniformMatrix4fv(uProjectionMatrix, false, projectionMatrix);
 
   // Vertex buffer
-  const vertexBuffer = gl.createBuffer();
+  vertexBuffer = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
-  const aPosition = gl.getAttribLocation(program, 'aPosition');
+  aPosition = gl.getAttribLocation(program, 'aPosition');
   gl.vertexAttribPointer(aPosition, 3, gl.FLOAT, false, 0, 0);
   gl.enableVertexAttribArray(aPosition);
 
-  // Color buffer
-  const colorBuffer = gl.createBuffer();
-  gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
-  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
-  const aColor = gl.getAttribLocation(program, 'aColor');
-  gl.vertexAttribPointer(aColor, 3, gl.FLOAT, false, 0, 0);
-  gl.enableVertexAttribArray(aColor);
-
   // Σχεδίαση
-  gl.drawArrays(gl.TRIANGLES, 0, vertices.length / 3);
+// Σχεδίαση με βάση τα default inputs
+redrawCamera(program);
+
 };
 
 // Δημιουργία κύβου και χρωμάτων
@@ -102,29 +107,35 @@ function getCubeData() {
   ], [1.0, 0.0, 0.0]); // Μπροστά – Κόκκινο
 
   pushFace([
-    -0.5, -0.5, -0.5, -0.5,  0.5, -0.5,  0.5,  0.5, -0.5,
-    -0.5, -0.5, -0.5,  0.5,  0.5, -0.5,  0.5, -0.5, -0.5
-  ], [0.0, 1.0, 0.0]); // Πίσω – Πράσινο
+    -0.5, -0.5, -0.5, 
+    -0.5,  0.5, -0.5,  
+     0.5,  0.5, -0.5,
+
+    -0.5, -0.5, -0.5, 
+     0.5,  0.5, -0.5, 
+     0.5, -0.5, -0.5
+
+  ], [0.0, 1.0, 0.0]); // Πίσω 
 
   pushFace([
     -0.5,  0.5, -0.5, -0.5,  0.5,  0.5,  0.5,  0.5,  0.5,
     -0.5,  0.5, -0.5,  0.5,  0.5,  0.5,  0.5,  0.5, -0.5
-  ], [0.0, 0.0, 1.0]); // Πάνω – Μπλε
+  ], [0.0, 0.0, 1.0]); // Πάνω
 
   pushFace([
     -0.5, -0.5, -0.5,  0.5, -0.5, -0.5,  0.5, -0.5,  0.5,
     -0.5, -0.5, -0.5,  0.5, -0.5,  0.5, -0.5, -0.5,  0.5
-  ], [1.0, 1.0, 0.0]); // Κάτω – Κίτρινο
+  ], [1.0, 1.0, 0.0]); // Κάτω 
 
   pushFace([
      0.5, -0.5, -0.5,  0.5,  0.5, -0.5,  0.5,  0.5,  0.5,
      0.5, -0.5, -0.5,  0.5,  0.5,  0.5,  0.5, -0.5,  0.5
-  ], [0.0, 1.0, 1.0]); // Δεξιά – Γαλάζιο
+  ], [0.0, 1.0, 1.0]); // Δεξιά 
 
   pushFace([
     -0.5, -0.5, -0.5, -0.5, -0.5,  0.5, -0.5,  0.5,  0.5,
     -0.5, -0.5, -0.5, -0.5,  0.5,  0.5, -0.5,  0.5, -0.5
-  ], [1.0, 0.0, 1.0]); // Αριστερά – Μοβ
+  ], [1.0, 0.0, 1.0]); // Αριστερά 
 
   return {vertices, colors};
 }
@@ -188,7 +199,42 @@ function redrawCamera(program) {
 
   // Ανασχεδίαση
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-  gl.drawArrays(gl.TRIANGLES, 0, 36);
+  drawRobot(uModelMatrix, program,uColor); //Επανασχεδιάζει το ρομπότ μετά από αλλαγή κάμερας
   console.log("View Angle (deg):", viewAngleDeg);
+}
 
+function drawCube(scaleVec, translateVec, color, uModelMatrix, program, uColor) {
+
+  gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+  gl.vertexAttribPointer(aPosition, 3, gl.FLOAT, false, 0, 0);
+  gl.enableVertexAttribArray(aPosition);
+  const modelMatrix = mat4.create();
+  mat4.translate(modelMatrix, modelMatrix, translateVec);
+  mat4.scale(modelMatrix, modelMatrix, scaleVec);
+  gl.uniformMatrix4fv(uModelMatrix, false, modelMatrix);
+
+  gl.uniform3fv(uColor, color);
+  gl.drawArrays(gl.TRIANGLES, 0, 36);
+
+}
+
+function drawRobot(uModelMatrix,program,uColor) {
+  // Πατούσες (κόκκινο)
+  drawCube([4, 6, 2], [-3, -1, 5], [0.7, 0.2, 0.2], uModelMatrix,program,uColor);
+  drawCube([4, 6, 2], [ 3, -1, 5], [0.7, 0.2, 0.2], uModelMatrix,program,uColor);
+
+  // Πόδια (κίτρινο)
+  drawCube([4, 4, 10], [-3, 0, 11], [0.9, 0.9, 0.1],uModelMatrix,program,uColor);
+  drawCube([4, 4, 10], [ 3, 0, 11], [0.9, 0.9, 0.1],uModelMatrix,program,uColor);
+
+  // Κορμός (κόκκινο)
+  drawCube([10, 6, 12], [0, 0, 22.2], [0.7, 0.2, 0.2],uModelMatrix,program,uColor);
+
+  // Χέρια (κίτρινο)
+  drawCube([2, 4, 10], [-7, -1, 23.6], [0.9, 0.9, 0.1],uModelMatrix,program,uColor);
+  drawCube([2, 4, 10], [ 6, -1, 23.6], [0.9, 0.9, 0.1],uModelMatrix,program,uColor);
+
+  // Κεφάλι (κίτρινο)
+  drawCube([6, 4, 5], [0, 0, 31], [0.9, 0.9, 0.1],uModelMatrix,program,uColor);
+  //       [πλάτος,βάθος,ύψος],[θέση κύβου],[χρώμα]
 }
