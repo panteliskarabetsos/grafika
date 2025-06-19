@@ -4,6 +4,9 @@ let uModelMatrix;
 let vertexBuffer;
 let aPosition;
 let uColor;
+let animationInterval = null;
+let angle = 0;
+let height = 40;
 
 
 window.onload = function () {
@@ -228,13 +231,92 @@ function drawRobot(uModelMatrix,program,uColor) {
   drawCube([4, 4, 10], [ 3, 0, 11], [0.9, 0.9, 0.1],uModelMatrix,program,uColor);
 
   // Κορμός (κόκκινο)
-  drawCube([10, 6, 12], [0, 0, 22.2], [0.7, 0.2, 0.2],uModelMatrix,program,uColor);
+  drawCube([10, 6, 12], [0, 0, 22], [0.7, 0.2, 0.2],uModelMatrix,program,uColor);
 
   // Χέρια (κίτρινο)
-  drawCube([2, 4, 10], [-7, -1, 23.6], [0.9, 0.9, 0.1],uModelMatrix,program,uColor);
-  drawCube([2, 4, 10], [ 6, -1, 23.6], [0.9, 0.9, 0.1],uModelMatrix,program,uColor);
+  drawCube([2, 4, 10], [-6, 0, 23], [0.9, 0.9, 0.1],uModelMatrix,program,uColor);
+  drawCube([2, 4, 10], [ 6, 0, 23], [0.9, 0.9, 0.1],uModelMatrix,program,uColor);
 
   // Κεφάλι (κίτρινο)
-  drawCube([6, 4, 5], [0, 0, 31], [0.9, 0.9, 0.1],uModelMatrix,program,uColor);
+  drawCube([6, 4, 5], [0, 0, 30], [0.9, 0.9, 0.1],uModelMatrix,program,uColor);
   //       [πλάτος,βάθος,ύψος],[θέση κύβου],[χρώμα]
+    drawGrid(program);
+}
+
+function drawGrid(program) {
+  const lines = [];
+  const color = [0.6, 0.6, 0.6]; // Γκρι
+
+  for (let i = -100; i <= 100; i += 10) {
+    // Κάθετες γραμμές
+    lines.push(i, -100, 0);  // από κάτω
+    lines.push(i,  100, 0);  // προς τα πάνω
+
+    // Οριζόντιες γραμμές
+    lines.push(-100, i, 0);  // από αριστερά
+    lines.push( 100, i, 0);  // προς τα δεξιά
+  }
+
+  const gridBuffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, gridBuffer);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(lines), gl.STATIC_DRAW);
+
+  const aPosition = gl.getAttribLocation(program, 'aPosition');
+  gl.vertexAttribPointer(aPosition, 3, gl.FLOAT, false, 0, 0);
+  gl.enableVertexAttribArray(aPosition);
+
+  gl.uniform3fv(uColor, color);
+  const modelMatrix = mat4.create();
+  gl.uniformMatrix4fv(uModelMatrix, false, modelMatrix);
+
+  gl.drawArrays(gl.LINES, 0, lines.length / 3);
+}
+
+function updateCameraSpiral(program) {
+  const camOrthoDistance = parseFloat(document.getElementById("camOrthoDistance").value);
+
+  const radius = camOrthoDistance;
+  const speed = 0.02; // ταχύτητα περιστροφής
+  const verticalAmplitude = 10; // πόσο θα ανεβοκατεβαίνει
+
+  angle += speed;
+  const eyeX = radius * Math.cos(angle);
+  const eyeY = radius * Math.sin(angle);
+  const eyeZ = height + verticalAmplitude * Math.sin(angle * 0.5); // σπειροειδές
+
+  const viewMatrix = mat4.create();
+  mat4.lookAt(viewMatrix, [eyeX, eyeY, eyeZ], [0, 0, 0], [0, 0, 1]);
+
+  const projectionMatrix = mat4.create();
+  const canvas = document.getElementById("glcanvas");
+  const aspect = canvas.width / canvas.height;
+  const viewAngleDeg = parseFloat(document.getElementById("viewAngle").value);
+  mat4.perspective(projectionMatrix, glMatrix.toRadian(viewAngleDeg), aspect, 0.001, 8000);
+
+  // Ενημέρωση uniform
+  const uViewMatrix = gl.getUniformLocation(program, "uViewMatrix");
+  const uProjectionMatrix = gl.getUniformLocation(program, "uProjectionMatrix");
+  gl.uniformMatrix4fv(uViewMatrix, false, viewMatrix);
+  gl.uniformMatrix4fv(uProjectionMatrix, false, projectionMatrix);
+
+  // Ανασχεδίαση
+  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+  drawRobot(uModelMatrix, program, uColor);
+}
+
+
+
+function startCameraAnimation(program) {
+  if (!animationInterval) {
+    animationInterval = setInterval(() => {
+      updateCameraSpiral(program);
+    }, 30); // 30ms ~ 33fps
+  }
+}
+
+function stopCameraAnimation() {
+  if (animationInterval) {
+    clearInterval(animationInterval);
+    animationInterval = null;
+  }
 }
