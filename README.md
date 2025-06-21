@@ -17,7 +17,7 @@
 
 ## ▶️ Εκτέλεση
 
-1. Κατέβασε ή κλωνοποίησε το αποθετήριο:
+1. Κατέβασε ή κλωνοποίησε το repository:
    ```bash
    git clone https://github.com/your-username/robot-webgl.git
    cd robot-webgl
@@ -75,13 +75,6 @@ python3 -m http.server
 
     Κουμπί Reset: επαναφέρει τις αρχικές τιμές (viewAngle = 60, camOrthoDistance = 8, cameraPos = Left-Front-Top)
 
-## 📂 Δομή Αρχείων
-
-├── index.html             # Το αρχικό HTML με canvas και UI
-├── main.js                # Όλη η WebGL λογική, buffers, camera, rendering
-├── metal.jpg              # Υφή για το σώμα του ρομπότ (power-of-2)
-├── head-texture.png       # Υφή κεφαλιού (μάτια/αυτιά/πίσω/πάνω/κάτω)
-├── gl-matrix-min.js       # Βιβλιοθήκη για πίνακες και διανύσματα
 
 ## ✍️ Συντελεστές
 
