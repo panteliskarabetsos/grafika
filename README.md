@@ -25,6 +25,8 @@
 ### Εκτέλεσε έναν τοπικό web server (π.χ. με Python):
 
 ```python3 -m http.server```
+         ή
+```npx http-server```
 
 ### Άνοιξε τον browser στη διεύθυνση:
 
